@@ -119,14 +119,22 @@ func browseCommand(kubeConfigFlags *genericclioptions.ConfigFlags, pvcName strin
 		node = attachedPod.Spec.NodeName
 	}
 
+	// retrieve taints of the selected node to smartly build in tolerations
+	nodeTaints, err := utils.GetNodeTaints(clientset, attachedPod.Spec.NodeName)
+	if err != nil {
+		fmt.Printf("Failed to get taints for node: %s. Continuing as if there weren't any", attachedPod.Spec.NodeName)
+	}
+	tolerationsForNode := utils.BuildTolerationsForTaints(nodeTaints)
+
 	options := &utils.PodOptions{
-		Image:     image,
-		Namespace: namespace,
-		Pvc:       *targetPvc,
-		Cmd:       []string{"/bin/sh", "-c", "--"},
-		Args:      commandArgs,
-		Node:      node,
-		User:      int64(containerUser),
+		Image:       image,
+		Namespace:   namespace,
+		Pvc:         *targetPvc,
+		Cmd:         []string{"/bin/sh", "-c", "--"},
+		Args:        commandArgs,
+		Node:        node,
+		User:        int64(containerUser),
+		Tolerations: tolerationsForNode,
 	}
 
 	// Build the Job
