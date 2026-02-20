@@ -64,10 +64,10 @@ func TestGetNodeTaints(t *testing.T) {
 
 func TestBuildTolerations(t *testing.T) {
 	tests := []struct {
-		name string
-		err  error
-
-		taint []v1.Taint
+		name                string
+		err                 error
+		expectedTolerations []v1.Toleration
+		taint               []v1.Taint
 	}{
 		{
 			name: "Single Taint",
@@ -79,6 +79,20 @@ func TestBuildTolerations(t *testing.T) {
 					Effect: v1.TaintEffectNoSchedule,
 				},
 			},
+			expectedTolerations: []v1.Toleration{
+				{
+					Key:      "key1",
+					Value:    "value1",
+					Effect:   v1.TaintEffectNoSchedule,
+					Operator: v1.TolerationOpEqual,
+				},
+			},
+		},
+		{
+			name:                "No Taints",
+			err:                 nil,
+			taint:               []v1.Taint{},
+			expectedTolerations: []v1.Toleration{},
 		},
 	}
 
@@ -87,21 +101,11 @@ func TestBuildTolerations(t *testing.T) {
 			_, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 
-			expectedTolerations := []v1.Toleration{
-				{
-					Key:      "key1",
-					Value:    "value1",
-					Effect:   v1.TaintEffectNoSchedule,
-					Operator: v1.TolerationOpEqual,
-				},
-			}
-
 			actualTolerations := BuildTolerationsForTaints(test.taint)
 
-			if !reflect.DeepEqual(actualTolerations, expectedTolerations) {
-				t.Errorf("Expected toleration to be %s, got %s", &expectedTolerations[0], &actualTolerations[0])
+			if !reflect.DeepEqual(actualTolerations, test.expectedTolerations) {
+				t.Errorf("Expected toleration to be %s, got %s", &test.expectedTolerations[0], &actualTolerations[0])
 			}
-
 		})
 	}
 }
