@@ -37,10 +37,23 @@ func TestGetNodeTaints(t *testing.T) {
 				},
 			),
 		},
+		{
+			name:   "Node not found returns error",
+			err:    nil,
+			client: fake.NewClientset(),
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.name == "Node not found returns error" {
+				_, err := GetNodeTaints(test.client, "nonexistent-node")
+				if err == nil {
+					t.Errorf("Expected an error for a nonexistent node, got nil")
+				}
+				return
+			}
+
 			expectedTaints := []v1.Taint{
 				{
 					Key:    "key1",
