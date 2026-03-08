@@ -119,12 +119,18 @@ func browseCommand(kubeConfigFlags *genericclioptions.ConfigFlags, pvcName strin
 		node = attachedPod.Spec.NodeName
 	}
 
+	var tolerationsForNode []corev1.Toleration = nil
+
 	// retrieve taints of the selected node to smartly build in tolerations
-	nodeTaints, err := utils.GetNodeTaints(clientset, attachedPod.Spec.NodeName)
-	if err != nil {
-		fmt.Printf("Failed to get taints for node: %s. Continuing as if there weren't any", attachedPod.Spec.NodeName)
+	if attachedPod != nil {
+		nodeTaints, err := utils.GetNodeTaints(clientset, attachedPod.Spec.NodeName)
+		if err != nil {
+			log.Printf("Failed to get taints for node: %s. Continuing as if there weren't any", attachedPod.Spec.NodeName)
+		}
+		if nodeTaints != nil {
+			tolerationsForNode = utils.BuildTolerationsForTaints(nodeTaints)
+		}
 	}
-	tolerationsForNode := utils.BuildTolerationsForTaints(nodeTaints)
 
 	options := &utils.PodOptions{
 		Image:       image,
