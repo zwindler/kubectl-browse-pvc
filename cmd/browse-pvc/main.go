@@ -30,6 +30,7 @@ import (
 var image string
 var Version string
 var containerUser int
+var readOnly bool
 
 var validCommands = []string{"image", "container-user"}
 
@@ -57,6 +58,7 @@ func main() {
 
 	rootCmd.Flags().StringVarP(&image, "image", "i", "alpine", "Image to mount job to")
 	rootCmd.Flags().IntVarP(&containerUser, "container-user", "u", 0, "User ID to run the container as")
+	rootCmd.Flags().BoolVarP(&readOnly, "read-only", "r", false, "Mount the PVC as read-only")
 	kubeConfigFlags.AddFlags(rootCmd.Flags())
 
 	if err := rootCmd.Execute(); err != nil {
@@ -141,6 +143,7 @@ func browseCommand(kubeConfigFlags *genericclioptions.ConfigFlags, pvcName strin
 		Node:        node,
 		User:        int64(containerUser),
 		Tolerations: tolerationsForNode,
+		ReadOnly:    readOnly,
 	}
 
 	// Build the Job

@@ -15,6 +15,7 @@ type PodOptions struct {
 	Node        string
 	User        int64
 	Tolerations []corev1.Toleration
+	ReadOnly    bool
 }
 
 var script = `
@@ -124,6 +125,7 @@ func BuildPvcbGetJob(options PodOptions) *batchv1.Job {
 								{
 									Name:      "target-pvc",
 									MountPath: "/mnt",
+									ReadOnly:  options.ReadOnly,
 								},
 							},
 						},
@@ -135,6 +137,7 @@ func BuildPvcbGetJob(options PodOptions) *batchv1.Job {
 							VolumeSource: corev1.VolumeSource{
 								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 									ClaimName: options.Pvc.Name,
+									ReadOnly:  options.ReadOnly,
 								},
 							},
 						},
